@@ -1,1 +1,0 @@
-# gorev-defteri-pwa
