@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gelişmiş Görev Defteri - Muhammed Efe KORKMAZ</title>
+ 
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+ 
+<!-- iOS Safari için -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Görev Defteri">
+<link rel="apple-touch-icon" href="icons/icon-152.png">
+ 
+<!-- Windows için -->
+<meta name="msapplication-TileImage" content="icons/icon-144.png">
+<meta name="msapplication-TileColor" content="#0097e6">
+ 
+<!-- Theme color -->
+<meta name="theme-color" content="#0097e6">
+ 
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f6fa;
+    color: #333;
+    padding: 20px;
+    transition: background-color 0.3s, color 0.3s;
+    line-height: 1.6;
+    margin: 0;
+    min-height: 100vh;
+  }
+  body.dark {
+    background-color: #2f3640;
+    color: #f5f6fa;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #0097e6;
+  }
+  body.dark h1 {
+    color: #44bd32;
+  }
+  #controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  #filters {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  input[type=text], select {
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    min-width: 150px;
+  }
+  input[type=text]:focus, select:focus {
+    outline: none;
+    border-color: #0097e6;
+    box-shadow: 0 0 0 2px rgba(0, 151, 230, 0.2);
+  }
+  body.dark input[type=text], 
+  body.dark select {
+    background-color: #353b48;
+    color: #f5f6fa;
+    border-color: #555;
+  }
+  button {
+    cursor: pointer;
+    background-color: #0097e6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    font-size: 1rem;
+    transition: all 0.3s;
+  }
+  button:hover {
+    background-color: #007bb5;
+    transform: translateY(-2px);
+  }
+  button:active {
+    transform: translateY(0);
+  }
+  body.dark button {
+    background-color: #44bd32;
+  }
+  body.dark button:hover {
+    background-color: #2f9e0b;
+  }
+  #filterAll {
+    background-color: #0097e6;
+  }
+  #filterActive {
+    background-color: #fbc531;
+  }
+  #filterCompleted {
+    background-color: #4cd137;
+  }
+  .filter-active {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  #stats {
+    background-color: rgba(0, 151, 230, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px auto;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+  }
+  body.dark #stats {
+    background-color: rgba(68, 189, 50, 0.1);
+  }
+  #stats p {
+    margin: 0;
+    font-weight: bold;
+  }
+  #stats span {
+    font-weight: normal;
+    display: block;
+    font-size: 1.2rem;
+    margin-top: 5px;
+  }
+  ul#taskList {
+    list-style: none;
+    padding-left: 0;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  ul#taskList li {
+    background-color: #ffffff;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
+  body.dark ul#taskList li {
+    background-color: #353b48;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .task-info {
+    flex-grow: 1;
+    margin-right: 15px;
+  }
+  .task-info.completed {
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  .priority-low {
+    color: #4cd137;
+    font-weight: bold;
+  }
+  .priority-medium {
+    color: #fbc531;
+    font-weight: bold;
+  }
+  .priority-high {
+    color: #e84118;
+    font-weight: bold;
+  }
+  .btn-group {
+    display: flex;
+    gap: 8px;
+  }
+  .btn-group button {
+    margin-left: 0;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    min-width: 70px;
+  }
+  .task-date {
+    font-size: 0.8rem;
+    color: #7f8fa6;
+    margin-top: 5px;
+  }
+  body.dark .task-date {
+    color: #dcdde1;
+  }
+  .edit-input {
+    padding: 8px;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    flex-grow: 1;
+    margin-right: 10px;
+    width: 60%;
+  }
+  .edit-priority {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    margin-right: 10px;
+  }
+  ul#taskList li.enter {
+    animation: fadeIn 0.3s ease-out;
+  }
+  ul#taskList li.exit {
+    animation: fadeOut 0.3s ease-out;
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+  .error-message {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px auto;
+    max-width: 600px;
+    text-align: center;
+    display: none;
+  }
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .install-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #0097e6, #44bd32);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    display: none;
+  }
+  .install-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  }
+  .pwa-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(68, 189, 50, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    z-index: 1000;
+    display: none;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(10px); }
+  }
+  @media (max-width: 600px) {
+    body {
+      padding: 10px;
+    }
+    #controls, #filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    ul#taskList li {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .btn-group {
+      margin-top: 10px;
+      align-self: flex-end;
+    }
+    .btn-group button {
+      margin-left: 0;
+      margin-right: 5px;
+    }
+    #stats {
+      flex-direction: column;
+      gap: 10px;
+    }
+    .install-btn {
+      bottom: 10px;
+      right: 10px;
+      left: 10px;
+      text-align: center;
+    }
+  }
+  /* PWA Standalone modda header'ı gizle */
+  @media (display-mode: standalone) {
+    .pwa-status {
+      display: block;
+    }
+  }
+</style>
+</head>
+<body>
+ 
+<div class="pwa-status" id="pwaStatus">📱 PWA Modunda</div>
+ 
+<h1>Gelişmiş Görev Defteri - Muhammed Efe KORKMAZ</h1>
+ 
+<div class="error-message" id="errorMessage"></div>
+ 
+<div id="controls">
+  <input type="text" id="taskInput" placeholder="Yeni görev giriniz..." maxlength="200" aria-label="Yeni görev" />
+  <select id="prioritySelect" aria-label="Öncelik seçimi">
+    <option value="Düşük">Düşük Öncelik</option>
+    <option value="Orta" selected>Orta Öncelik</option>
+    <option value="Yüksek">Yüksek Öncelik</option>
+  </select>
+  <button id="addTaskBtn" aria-label="Görev ekle">Görev Ekle</button>
+  <button id="toggleThemeBtn" aria-label="Tema değiştir">Koyu Mod Aç</button>
+</div>
+ 
+<div id="filters">
+  <button id="filterAll" class="filter-active" aria-label="Tüm görevleri göster">Tümü</button>
+  <button id="filterActive" aria-label="Aktif görevleri göster">Aktif</button>
+  <button id="filterCompleted" aria-label="Tamamlanan görevleri göster">Tamamlanan</button>
+  <select id="sortSelect" aria-label="Sıralama seçimi">
+    <option value="date">Oluşturma Tarihi</option>
+    <option value="priority">Öncelik</option>
+  </select>
+</div>
+ 
+<div id="stats">
+  <p>Toplam Görev: <span id="totalTasks">0</span></p>
+  <p>Tamamlanan: <span id="completedTasks">0</span></p>
+  <p>Kalan: <span id="remainingTasks">0</span></p>
+</div>
+ 
+<ul id="taskList" role="list"></ul>
+ 
+<button class="install-btn" id="installBtn">📱 Uygulamayı Yükle</button>
+ 
+<script>
+  // Elemanlar
+  const taskInput = document.getElementById('taskInput');
+  const prioritySelect = document.getElementById('prioritySelect');
+  const addTaskBtn = document.getElementById('addTaskBtn');
+  const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+  const taskList = document.getElementById('taskList');
+  const body = document.body;
+  const filterAll = document.getElementById('filterAll');
+  const filterActive = document.getElementById('filterActive');
+  const filterCompleted = document.getElementById('filterCompleted');
+  const sortSelect = document.getElementById('sortSelect');
+  const errorMessage = document.getElementById('errorMessage');
+  const installBtn = document.getElementById('installBtn');
+  const pwaStatus = document.getElementById('pwaStatus');
+ 
+  // Görevler dizisi
+  let tasks = [];
+  let currentFilter = 'all';
+  let currentSort = 'date';
+  let deferredPrompt;
+ 
+  // LocalStorage anahtarları
+  const LS_TASKS_KEY = 'muhammedEfeTasks';
+  const LS_THEME_KEY = 'muhammedEfeTheme';
+ 
+  // Priority mapping için
+  const priorityMap = {
+    'Düşük': 'low',
+    'Orta': 'medium', 
+    'Yüksek': 'high'
+  };
+ 
+  // PWA Install Prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+  });
+ 
+  // PWA Install Button Click
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      installBtn.style.display = 'none';
+      showError('Uygulama ana ekranınıza eklendi! 🎉', 'success');
+    }
+    
+    deferredPrompt = null;
+  });
+ 
+  // PWA durumu kontrolü
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+    showError('Uygulama başarıyla yüklendi! 📱', 'success');
+  });
+ 
+  // Service Worker kayıt
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('./sw.js');
+        console.log('SW kayıtlı:', registration);
+        
+        // Güncelleme kontrolü
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showError('Yeni versiyon mevcut! Sayfayı yenileyin.', 'info');
+            }
+          });
+        });
+      } catch (error) {
+        console.log('SW kayıt hatası:', error);
+      }
+    });
+  }
+ 
+  // Online/Offline durumu
+  window.addEventListener('online', () => {
+    showError('İnternet bağlantısı geri geldi! 🌐', 'success');
+  });
+ 
+  window.addEventListener('offline', () => {
+    showError('Offline moddasınız. Değişiklikler yerel olarak saklanacak. 📴', 'warning');
+  });
+ 
+  // Hata gösterme fonksiyonu (geliştirilmiş)
+  function showError(message, type = 'error') {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    
+    // Tip göre renk ayarla
+    switch(type) {
+      case 'success':
+        errorMessage.style.backgroundColor = '#4cd137';
+        break;
+      case 'warning':
+        errorMessage.style.backgroundColor = '#fbc531';
+        break;
+      case 'info':
+        errorMessage.style.backgroundColor = '#0097e6';
+        break;
+      default:
+        errorMessage.style.backgroundColor = '#ff6b6b';
+    }
+    
+    setTimeout(() => {
+      errorMessage.style.display = 'none';
+    }, type === 'error' ? 3000 : 5000);
+  }
+ 
+  // LocalStorage'a kaydetme
+  function saveTasks() {
+    try {
+      localStorage.setItem(LS_TASKS_KEY, JSON.stringify(tasks));
+      
+      // Background sync için offline değişiklikleri kaydet
+      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+        navigator.serviceWorker.ready.then(registration => {
+          return registration.sync.register('background-sync');
+        });
+      }
+    } catch (error) {
+      console.error('Kaydetme hatası:', error);
+      showError('Görevler kaydedilemedi! Tarayıcınızın localStorage desteğini kontrol edin.');
+    }
+  }
+ 
+  // İstatistikleri güncelleme
+  function updateStats() {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.completed).length;
+    const remaining = total - completed;
+    
+    document.getElementById('totalTasks').textContent = total;
+    document.getElementById('completedTasks').textContent = completed;
+    document.getElementById('remainingTasks').textContent = remaining;
+  }
+ 
+  // Tarih doğrulama fonksiyonu
+  function isValidDate(dateString) {
+    if (!dateString) return true;
+    
+    const regex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = dateString.match(regex);
+    
+    if (!match) return false;
+    
+    const day = parseInt(match[1]);
+    const month = parseInt(match[2]);
+    const year = parseInt(match[3]);
+    
+    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2020) {
+      return false;
+    }
+    
+    return true;
+  }
+ 
+  // Filtreleme fonksiyonu
+  function setFilter(filter) {
+    currentFilter = filter;
+    
+    document.querySelectorAll('#filters button').forEach(btn => {
+      btn.classList.remove('filter-active');
+    });
+    
+    if (filter === 'all') filterAll.classList.add('filter-active');
+    if (filter === 'active') filterActive.classList.add('filter-active');
+    if (filter === 'completed') filterCompleted.classList.add('filter-active');
+    
+    renderTasks();
+  }
+ 
+  // Sıralama fonksiyonu
+  function setSort(sort) {
+    currentSort = sort;
+    renderTasks();
+  }
+ 
+  // Sayfa açılırken
+  window.onload = () => {
+    const savedTheme = localStorage.getItem(LS_THEME_KEY);
+    if (savedTheme === 'dark') {
+      body.classList.add('dark');
+      toggleThemeBtn.textContent = 'Açık Mod Aç';
+    }
+    
+    try {
+      const savedTasks = localStorage.getItem(LS_TASKS_KEY);
+      if (savedTasks) {
+        tasks = JSON.parse(savedTasks);
+        renderTasks();
+      }
+    } catch (error) {
+      console.error('Görev yükleme hatası:', error);
+      showError('Kayıtlı görevler yüklenemedi!');
+    }
+    
+    updateStats();
+    setupEventListeners();
+    
+    // PWA durumunu kontrol et
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      pwaStatus.style.display = 'block';
+    }
+  };
+ 
+  // Event listener'ları ayarla
+  function setupEventListeners() {
+    addTaskBtn.addEventListener('click', addTask);
+    taskInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addTask();
+    });
+ 
+    toggleThemeBtn.addEventListener('click', () => {
+      body.classList.toggle('dark');
+      const isDark = body.classList.contains('dark');
+      toggleThemeBtn.textContent = isDark ? 'Açık Mod Aç' : 'Koyu Mod Aç';
+      localStorage.setItem(LS_THEME_KEY, isDark ? 'dark' : 'light');
+    });
+ 
+    filterAll.addEventListener('click', () => setFilter('all'));
+    filterActive.addEventListener('click', () => setFilter('active'));
+    filterCompleted.addEventListener('click', () => setFilter('completed'));
+    sortSelect.addEventListener('change', (e) => setSort(e.target.value));
+  }
+ 
+  // Görevleri DOM'a bas
+  function renderTasks() {
+    taskList.innerHTML = '';
+    
+    let filteredTasks = [...tasks];
+    
+    if (currentFilter === 'active') filteredTasks = tasks.filter(t => !t.completed);
+    if (currentFilter === 'completed') filteredTasks = tasks.filter(t => t.completed);
+    
+    if (currentSort === 'priority') {
+      const priorityOrder = { 'Yüksek': 1, 'Orta': 2, 'Düşük': 3 };
+      filteredTasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    } else {
+      filteredTasks.sort((a, b) => a.id - b.id);
+    }
+    
+    if (filteredTasks.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = currentFilter === 'all' ? 'Henüz görev eklenmedi' : 
+                     currentFilter === 'active' ? 'Aktif görev bulunamadı' : 
+                     'Tamamlanan görev bulunamadı';
+      li.style.textAlign = 'center';
+      li.style.padding = '20px';
+      li.style.opacity = '0.7';
+      li.setAttribute('role', 'listitem');
+      taskList.appendChild(li);
+      return;
+    }
+    
+    filteredTasks.forEach(task => {
+      const li = document.createElement('li');
+      li.classList.add('enter');
+      li.setAttribute('role', 'listitem');
+ 
+      const taskInfo = document.createElement('div');
+      taskInfo.className = 'task-info';
+      if (task.completed) taskInfo.classList.add('completed');
+      
+      const prioritySpan = document.createElement('span');
+      prioritySpan.textContent = `[${task.priority}] `;
+      prioritySpan.className = `priority-${priorityMap[task.priority]}`;
+      
+      const titleSpan = document.createElement('span');
+      titleSpan.textContent = task.title;
+      
+      taskInfo.appendChild(prioritySpan);
+      taskInfo.appendChild(titleSpan);
+      
+      if (task.dueDate) {
+        const dateSpan = document.createElement('div');
+        dateSpan.className = 'task-date';
+        dateSpan.textContent = `Son teslim: ${task.dueDate}`;
+        taskInfo.appendChild(dateSpan);
+      }
+ 
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'btn-group';
+ 
+      const toggleBtn = document.createElement('button');
+      toggleBtn.textContent = task.completed ? 'Geri Al' : 'Tamamla';
+      toggleBtn.setAttribute('aria-label', task.completed ? 'Görevi aktif yap' : 'Görevi tamamla');
+      toggleBtn.onclick = () => {
+        task.completed = !task.completed;
+        saveTasks();
+        renderTasks();
+        updateStats();
+      };
+ 
+      const dateBtn = document.createElement('button');
+      dateBtn.textContent = task.dueDate ? 'Tarih Değiştir' : 'Tarih Ekle';
+      dateBtn.setAttribute('aria-label', 'Son teslim tarihi ekle/değiştir');
+      dateBtn.onclick = () => {
+        const currentDate = task.dueDate || '';
+        const dateStr = prompt('Son teslim tarihi (GG/AA/YYYY formatında):', currentDate);
+        
+        if (dateStr !== null) {
+          if (dateStr === '' || isValidDate(dateStr)) {
+            task.dueDate = dateStr || null;
+            saveTasks();
+            renderTasks();
+          } else {
+            showError('Geçersiz tarih formatı! GG/AA/YYYY formatında giriniz.');
+          }
+        }
+      };
+ 
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Düzenle';
+      editBtn.setAttribute('aria-label', 'Görevi düzenle');
+      editBtn.onclick = () => {
+        setupTaskEditing(li, task);
+      };
+ 
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Sil';
+      delBtn.style.backgroundColor = '#e84118';
+      delBtn.setAttribute('aria-label', 'Görevi sil');
+      delBtn.onclick = () => {
+        if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
+          li.classList.add('exit');
+          setTimeout(() => {
+            tasks = tasks.filter(t => t !== task);
+            saveTasks();
+            renderTasks();
+            updateStats();
+          }, 300);
+        }
+      };
+ 
+      btnGroup.appendChild(toggleBtn);
+      btnGroup.appendChild(dateBtn);
+      btnGroup.appendChild(editBtn);
+      btnGroup.appendChild(delBtn);
+ 
+      li.appendChild(taskInfo);
+      li.appendChild(btnGroup);
+      taskList.appendChild(li);
+      
+      li.addEventListener('dblclick', () => {
+        setupTaskEditing(li, task);
+      });
+    });
+  }
+ 
+  // Görev düzenleme modu
+  function setupTaskEditing(li, task) {
+    const originalContent = li.innerHTML;
+    
+    li.innerHTML = `
+      <input type="text" value="${task.title.replace(/"/g, '&quot;')}" class="edit-input" maxlength="200" aria-label="Görev başlığını düzenle">
+      <select class="edit-priority" aria-label="Öncelik düzenle">
+        <option value="Düşük" ${task.priority === 'Düşük' ? 'selected' : ''}>Düşük</option>
+        <option value="Orta" ${task.priority === 'Orta' ? 'selected' : ''}>Orta</option>
+        <option value="Yüksek" ${task.priority === 'Yüksek' ? 'selected' : ''}>Yüksek</option>
+      </select>
+      <button class="save-edit" aria-label="Değişiklikleri kaydet">Kaydet</button>
+      <button class="cancel-edit" aria-label="Düzenlemeyi iptal et" style="background-color: #e84118;">İptal</button>
+    `;
+    
+    const saveBtn = li.querySelector('.save-edit');
+    const cancelBtn = li.querySelector('.cancel-edit');
+    const input = li.querySelector('.edit-input');
+    
+    input.focus();
+    input.select();
+    
+    const saveChanges = () => {
+      const newTitle = input.value.trim();
+      const newPriority = li.querySelector('.edit-priority').value;
+      
+      if (newTitle && newTitle.length <= 200) {
+        task.title = newTitle;
+        task.priority = newPriority;
+        saveTasks();
+        renderTasks();
+      } else if (!newTitle) {
+        showError('Görev başlığı boş olamaz!');
+      } else {
+        showError('Görev başlığı çok uzun (max 200 karakter)!');
+      }
+    };
+    
+    const cancelChanges = () => {
+      li.innerHTML = originalContent;
+      setupTaskEventListeners(li, task);
+    };
+    
+    saveBtn.addEventListener('click', saveChanges);
+    cancelBtn.addEventListener('click', cancelChanges);
+    
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        saveChanges();
+      } else if (e.key === 'Escape') {
+        cancelChanges();
+      }
+    });
+  }
+ 
+  function setupTaskEventListeners(li, task) {
+    li.addEventListener('dblclick', () => {
+      setupTaskEditing(li, task);
+    });
+  }
+ 
+  // Görev ekleme
+  function addTask() {
+    const title = taskInput.value.trim();
+    
+    if (title === '') {
+      taskInput.placeholder = "Lütfen görev giriniz!";
+      taskInput.style.borderColor = "red";
+      taskInput.focus();
+      setTimeout(() => {
+        taskInput.placeholder = "Yeni görev giriniz...";
+        taskInput.style.borderColor = "";
+      }, 2000);
+      return;
+    }
+    
+    if (title.length > 200) {
+      showError('Görev başlığı çok uzun (max 200 karakter)!');
+      return;
+    }
+    
+    const newTask = {
+      title,
+      priority: prioritySelect.value,
+      completed: false,
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      dueDate: null
+    };
+    
+    tasks.push(newTask);
+    taskInput.value = '';
+    saveTasks();
+    renderTasks();
+    updateStats();
+    
+    taskInput.placeholder = "Görev başarıyla eklendi!";
+    taskInput.style.borderColor = "#4cd137";
+    setTimeout(() => {
+      taskInput.placeholder = "Yeni görev giriniz...";
+      taskInput.style.borderColor = "";
+    }, 1500);
+  }
+ 
+  // Klavye kısayolları
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'd') {
+      e.preventDefault();
+      const completedTasks = tasks.filter(t => t.completed);
+      if (completedTasks.length > 0) {
+        if (confirm(`${completedTasks.length} tamamlanan görevi silmek istediğinizden emin misiniz?`)) {
+          tasks = tasks.filter(t => !t.completed);
+          saveTasks();
+          renderTasks();
+          updateStats();
+        }
+      }
+    }
+  });
+</script>
+ 
+</body>
+</html>
